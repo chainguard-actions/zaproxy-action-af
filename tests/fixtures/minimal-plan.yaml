@@ -1,0 +1,11 @@
+---
+env:
+  contexts:
+    - name: "Test Context"
+      urls:
+        - "http://localhost"
+  parameters:
+    failOnError: false
+    failOnWarning: false
+    progressToStdout: true
+jobs:
