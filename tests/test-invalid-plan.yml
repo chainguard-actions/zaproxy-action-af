@@ -1,0 +1,24 @@
+name: Test ZAP AF with invalid plan path
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        with:
+          plan: nonexistent-plan.yaml
+          docker_name: ghcr.io/zaproxy/zaproxy:stable
+        continue-on-error: true
+
+      - name: Assert action failed for invalid plan
+        run: |
+          echo "outcome: ${{ steps.action.outcome }}"
+          if [ "${{ steps.action.outcome }}" != "failure" ]; then
+            echo "FAIL: expected action to fail with invalid plan, got: ${{ steps.action.outcome }}"
+            exit 1
+          fi
+          echo "PASS: action correctly failed for invalid plan path"
