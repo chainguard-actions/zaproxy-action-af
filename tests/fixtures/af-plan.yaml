@@ -1,0 +1,15 @@
+---
+env:
+  contexts:
+    - name: "Test Context"
+      urls:
+        - "http://localhost"
+  parameters:
+    failOnError: false
+    failOnWarning: false
+    progressToStdout: true
+jobs:
+  - type: passiveScan-config
+    parameters:
+      maxAlertsPerRule: 10
+      scanOnlyInScope: true
