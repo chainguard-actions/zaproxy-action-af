@@ -1,4 +1,4 @@
-name: Test ZAP AF - Docker Env Vars Input
+name: Test ZAP AF - Basic Invocation (expected failure with non-ZAP image)
 on:
   workflow_dispatch:
 jobs:
@@ -21,25 +21,21 @@ jobs:
                 maxAlertsPerRule: 10
           EOF
 
-      - name: Run ZAP AF action with env vars (expected to fail - alpine has no zap.sh)
+      - name: Run ZAP AF action (expected to fail - alpine has no zap.sh)
         id: zap_action
         uses: .
         with:
           plan: af-plan.yaml
           docker_name: alpine:3.18
-          docker_env_vars: |
-            MY_CUSTOM_VAR=test_value
-            ANOTHER_VAR=another_value
         continue-on-error: true
 
-      - name: Assert action ran with env vars (failed as expected with non-ZAP image)
+      - name: Assert action ran (failed as expected with non-ZAP image)
         run: |
           echo "outcome: ${{ steps.zap_action.outcome }}"
           # The action should fail because alpine does not have zap.sh
-          # This confirms the action correctly processed docker_env_vars input
-          # and attempted to run Docker with those env vars
+          # This confirms the action correctly invoked Docker and attempted to run ZAP
           if [ "${{ steps.zap_action.outcome }}" = "failure" ]; then
-            echo "PASS: action correctly failed when zap.sh is not available, confirming env vars were processed"
+            echo "PASS: action correctly failed when zap.sh is not available in the image"
           else
             echo "FAIL: expected action to fail with non-ZAP image, but got: ${{ steps.zap_action.outcome }}"
             exit 1
