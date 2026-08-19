@@ -1,4 +1,4 @@
-name: Test ZAP AF with additional cmd options
+name: Test ZAP AF scan with custom cmd_options
 on:
   workflow_dispatch:
 jobs:
@@ -6,18 +6,68 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up mock docker
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          printf '%s\n' '#!/bin/sh' \
+            '# Mock docker: intercept pull and run for ZAP testing' \
+            'if [ "$1" = "pull" ]; then' \
+            '  echo "Mock: docker pull $2 (skipped)"' \
+            '  exit 0' \
+            'fi' \
+            'if [ "$1" = "run" ]; then' \
+            '  WORKSPACE=""' \
+            '  PLAN_ARG=""' \
+            '  FOUND_SILENT=0' \
+            '  PREV=""' \
+            '  for arg in "$@"; do' \
+            '    if [ "$PREV" = "-v" ]; then' \
+            '      case "$arg" in' \
+            '        *:/zap/wrk/:rw) WORKSPACE="${arg%%:*}" ;;' \
+            '      esac' \
+            '    fi' \
+            '    if [ "$PREV" = "-autorun" ]; then' \
+            '      PLAN_ARG="$arg"' \
+            '    fi' \
+            '    if [ "$arg" = "-silent" ]; then' \
+            '      FOUND_SILENT=1' \
+            '    fi' \
+            '    PREV="$arg"' \
+            '  done' \
+            '  echo "Mock: docker run called, workspace=$WORKSPACE plan=$PLAN_ARG silent=$FOUND_SILENT"' \
+            '  if [ "$FOUND_SILENT" != "1" ]; then' \
+            '    echo "Mock: FAIL - expected -silent in docker run args"' \
+            '    exit 1' \
+            '  fi' \
+            '  if [ -n "$PLAN_ARG" ] && [ -n "$WORKSPACE" ]; then' \
+            '    PLAN_FILE="${PLAN_ARG#/zap/wrk/}"' \
+            '    FULL_PATH="$WORKSPACE/$PLAN_FILE"' \
+            '    if [ ! -f "$FULL_PATH" ]; then' \
+            '      echo "Mock: plan file not found at $FULL_PATH"' \
+            '      exit 1' \
+            '    fi' \
+            '    echo "Mock: plan file found at $FULL_PATH"' \
+            '  fi' \
+            '  echo "Mock: ZAP scan completed successfully with cmd_options"' \
+            '  exit 0' \
+            'fi' \
+            'echo "Mock: unknown docker command: $*"' \
+            'exit 1' > "$HOME/.local/bin/docker"
+          chmod +x "$HOME/.local/bin/docker"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Copy plan into workspace root
+        run: |
+          cp "$GITHUB_WORKSPACE/tests/fixtures/minimal-plan.yaml" "$GITHUB_WORKSPACE/minimal-plan.yaml"
+
       - id: action
         uses: .
         with:
-          plan: tests/fixtures/minimal-plan.yaml
+          plan: minimal-plan.yaml
           docker_name: ghcr.io/zaproxy/zaproxy:stable
           cmd_options: '-silent'
-        continue-on-error: true
-      - name: Assert action was invoked with cmd options
+
+      - name: Assert action completed with cmd_options
         run: |
-          echo "Action outcome: ${{ steps.action.outcome }}"
-          if [ "${{ steps.action.outcome }}" = "skipped" ]; then
-            echo "FAIL: action was skipped unexpectedly"
-            exit 1
-          fi
-          echo "PASS: action was invoked with cmd_options (outcome: ${{ steps.action.outcome }})"
+          echo "PASS: ZAP AF scan completed with cmd_options set"

@@ -1,0 +1,47 @@
+name: Check run
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-run:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+    - run: sudo systemctl start nginx
+
+    - name: ZAP Plan
+      uses: ./
+      id: af-plan
+      with:
+        plan: '.github/workflows/zap/af-plan.yml'
+
+    - name: ZAP Plan with Error
+      continue-on-error: true
+      uses: ./
+      id: af-plan-error
+      with:
+        plan: '.github/workflows/zap/af-plan-error.yml'
+
+    - name: Check ZAP Plan with Error Failed
+      run: exit 1
+      if: ${{ !cancelled() && steps.af-plan-error.outcome == 'success' }}
+
+    - name: ZAP Plan with File Creation
+      uses: ./
+      id: af-plan-files
+      with:
+        plan: '.github/workflows/zap/af-plan-files.yml'
+
+    - name: Check ZAP Plan with File Creation
+      run: "[ -f sarif.json ]"

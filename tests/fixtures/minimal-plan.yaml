@@ -1,11 +1,11 @@
 ---
 env:
   contexts:
-    - name: "Test Context"
+    - name: Default Context
       urls:
-        - "http://localhost"
+        - http://localhost
   parameters:
     failOnError: false
     failOnWarning: false
     progressToStdout: true
-jobs:
+jobs: []
