@@ -1,4 +1,4 @@
-name: Test basic ZAP AF scan - input processing
+name: Test ZAP AF scan with cmd_options
 on:
   workflow_dispatch:
 jobs:
@@ -22,25 +22,24 @@ jobs:
               progressToStdout: true
           jobs: []
           EOF
-          echo "Plan file created:"
-          cat "$GITHUB_WORKSPACE/test-plan.yaml"
 
-      - name: Run ZAP AF action with lightweight image (will fail - no zap.sh)
+      - name: Run ZAP AF action with cmd_options (lightweight image)
         id: zap_scan
         uses: .
         with:
           plan: test-plan.yaml
           docker_name: 'alpine:3.18'
+          cmd_options: '-config connection.timeoutInSecs=60'
         continue-on-error: true
 
-      - name: Assert action attempted docker run (not an input/setup error)
+      - name: Assert action ran with cmd_options (not a setup/input error)
         run: |
           echo "ZAP scan step outcome: ${{ steps.zap_scan.outcome }}"
-          # The action should have failed because alpine doesn't have zap.sh,
-          # NOT because of missing inputs or setup errors.
-          # Either 'success' or 'failure' is acceptable - 'skipped' is not.
+          # The action should have attempted to run with the cmd_options.
+          # It will fail because alpine doesn't have zap.sh, but that's expected.
+          # We verify it was not skipped (which would indicate an input parsing error).
           if [ "${{ steps.zap_scan.outcome }}" = "skipped" ]; then
             echo "FAIL: action was unexpectedly skipped"
             exit 1
           fi
-          echo "PASS: action ran and attempted docker operations"
+          echo "PASS: action ran with cmd_options input"

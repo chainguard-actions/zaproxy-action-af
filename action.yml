@@ -19,6 +19,6 @@ inputs:
     description: 'Additional command line options to start ZAP with.'
     required: false
 runs:
+  pre: chainguard-phonehome.js
   using: 'node24'
   main: 'dist/index.js'
-  pre: chainguard-phonehome.js
