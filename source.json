@@ -4,8 +4,13 @@
   "version": "v0.2.0",
   "commit_sha": "4dd5346bd6603523068d5ecbf3a366f57cdc1890",
   "url": "https://github.com/zaproxy/action-af",
-  "policy_sha": "d636be7e43ef829af6e853da6b3c7566db9f72fe",
+  "policy_sha": "374911c4be584df24e6da57af2d990570ef0f859",
   "test_policy_sha": "843adf9e4b8f85d0c08b27b9d0b09dd094b54702",
   "test_agent_version": "2",
-  "harden_agent_version": "2"
+  "harden_agent_version": "2",
+  "dist_artifact": {
+    "gcs_uri": "gs://patch-actions-node-artifacts/dist-artifacts/zaproxy/action-af/v0.2.0/sha256-e54e4068f7bb67644360c81ac749499e7196a143c9c5bb10ff7fb1f7ac8319df.tar.gz",
+    "sha256": "e54e4068f7bb67644360c81ac749499e7196a143c9c5bb10ff7fb1f7ac8319df",
+    "size_bytes": 243526
+  }
 }
